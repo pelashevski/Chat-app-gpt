@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+  <meta charset="UTF-8" />
+  <title>צ'אט חכם</title>
+  <style>
+    body { font-family: sans-serif; direction: rtl; padding: 20px; }
+    #chat { max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+    .msg { margin: 5px 0; }
+    .user { text-align: right; }
+    .bot { text-align: left; }
+  </style>
+</head>
+<body>
+  <h2>צ'אט עם GPT</h2>
+  <div id="chat"></div>
+  <input type="text" id="input" placeholder="כתוב כאן..." style="width: 80%;">
+  <button onclick="sendMessage()">שלח</button>
+  <br /><br />
+  <input type="file" id="fileInput" />
+  <button onclick="sendFile()">שלח קובץ</button>
+
+  <script>
+    const chat = document.getElementById('chat');
+
+    function appendMessage(text, cls) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + cls;
+      div.textContent = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('input');
+      const text = input.value;
+      if (!text) return;
+
+      appendMessage(text, 'user');
+      input.value = '';
+
+      const res = await fetch('/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+      const data = await res.json();
+      appendMessage(data.reply, 'bot');
+    }
+
+    async function sendFile() {
+      const file = document.getElementById('fileInput').files[0];
+      if (!file) return alert("בחר קובץ קודם");
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/upload', { method: 'POST', body: formData });
+      const data = await res.text();
+      alert(data);
+    }
+  </script>
+</body>
+</html>
